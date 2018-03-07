@@ -281,7 +281,17 @@ extension GBHFacebookAlbumPicker: GBHAlbumPickerTableViewControllerDelegate {
     ///
     /// - parameter imageModels: model of the selected pictures
     func didSelecPicturesInAlbum(imageModels: [GBHFacebookImage]) {
-
+        if !GBHFacebookImagePicker.pickerConfig.downloadImages {
+            // Call success delegate
+            self.delegate?.facebookImagePicker(
+                imagePicker: self,
+                successImageModels: imageModels,
+                errorImageModels: [],
+                errors: []
+            )
+            self.dismissPicker(.success)
+            return
+        }
         var successModels = [GBHFacebookImage]()
         var errorModels = [GBHFacebookImage]()
         var errors = [Error?]()

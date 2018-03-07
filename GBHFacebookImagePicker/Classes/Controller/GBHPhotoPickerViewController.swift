@@ -214,8 +214,10 @@ class GBHPhotoPickerViewController: UIViewController {
     }
 
     @objc func actionSelectBarButton(sender: UIBarButtonItem) {
-        // Clean collection and start loading
-        self.cleanController()
+        if GBHFacebookImagePicker.pickerConfig.downloadImages {
+             // Clean collection and start loading
+            self.cleanController()
+        }
 
         // Send to album delegate for download
         self.albumPictureDelegate?.didSelecPicturesInAlbum(imageModels: self.selectedImages)
@@ -268,10 +270,12 @@ extension GBHPhotoPickerViewController: UICollectionViewDataSource, UICollection
             // Multiple selection mode 
             self.selectedImages.append(imageModel)
         } else {
-            // Clean collection and start loading
-            self.cleanController()
+            if GBHFacebookImagePicker.pickerConfig.downloadImages {
+                // Clean collection and start loading
+                self.cleanController()
+            }
 
-            // Single selection mode  
+            // Single selection mode
             // Send to album delegate for download
             self.albumPictureDelegate?.didSelecPicturesInAlbum(imageModels: [imageModel])
         }

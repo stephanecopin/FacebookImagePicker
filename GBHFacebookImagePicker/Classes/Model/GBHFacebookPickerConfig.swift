@@ -84,6 +84,9 @@ public struct GBHFacebookPickerConfig {
     public var taggedAlbumName: String = NSLocalizedString("Photos of You",
                                                             comment: "")
 
+    /// Whether the photo picker downloads images as UIImage or not
+    public var downloadImages: Bool = true
+
     /// UI-specific configuration.
     public var uiConfig = UIConfig()
 }

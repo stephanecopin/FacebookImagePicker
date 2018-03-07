@@ -13,9 +13,9 @@ public protocol GBHFacebookImagePickerDelegate: class {
     ///
     /// - Parameters:
     ///   - imagePicker: the picker controller
-    ///   - successImageModels: GBHFacebookImageModels which contain image URLs, images, and image IDs
-    ///   - errorImageModels: GBHFacebookImageModels which caused an error
-    ///   - errors: with description
+    ///   - successImageModels: GBHFacebookImageModels which contain image URLs, images (if GBHFacebookImagePicker.pickerConfig.downloadImages is set to true), and image IDs
+    ///   - errorImageModels: GBHFacebookImageModels which caused an error (always empty if GBHFacebookImagePicker.pickerConfig.downloadImages is set to false)
+    ///   - errors: with description (always empty if GBHFacebookImagePicker.pickerConfig.downloadImages is set to false)
     func facebookImagePicker(
         imagePicker: UIViewController,
         successImageModels: [GBHFacebookImage],
