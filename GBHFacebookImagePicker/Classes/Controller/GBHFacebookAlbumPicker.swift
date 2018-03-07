@@ -19,17 +19,25 @@ protocol GBHAlbumPickerTableViewControllerDelegate: class {
     func didFailSelectPictureInAlbum(error: Error?)
 }
 
-class GBHFacebookAlbumPicker: UITableViewController {
+open class GBHFacebookAlbumPicker: UITableViewController {
 
     // Status bar
-    override var preferredStatusBarStyle: UIStatusBarStyle {
+    override open var preferredStatusBarStyle: UIStatusBarStyle {
         return GBHFacebookImagePicker.pickerConfig.uiConfig.statusbarStyle
     }
 
     // MARK: - Var
 
     /// The image picker delegate 
-    weak var delegate: GBHFacebookImagePickerDelegate?
+    public weak var delegate: GBHFacebookImagePickerDelegate?
+
+    public enum DismissType {
+        case cancelled
+        case failure(Error)
+        case success
+    }
+
+    public var dismissAction: ((DismissType) -> Void)?
 
     /// Album cell identifier 
     private let reuseIdentifier = "AlbumCell"
@@ -49,7 +57,7 @@ class GBHFacebookAlbumPicker: UITableViewController {
 
     // MARK: - Lifecycle
 
-    override public func viewDidLoad() {
+    override open func viewDidLoad() {
         super.viewDidLoad()
 
         // Prepare view
@@ -140,11 +148,11 @@ class GBHFacebookAlbumPicker: UITableViewController {
                     case .loginCancelled:
                         // Cancelled login
                         self.delegate?.facebookImagePicker(didCancelled: self)
-                        self.dismissPicker()
+                        self.dismissPicker(.cancelled)
                     case .loginFailed:
                         // Failed to login with Facebook
-                        self.delegate?.facebookImagePicker(imagePicker: self, didFailWithError: error)
-                        self.dismissPicker()
+                        self.delegate?.facebookImagePicker(imagePicker: self, didFailWithError: loginError)
+                        self.dismissPicker(.failure(loginError))
                     case .permissionDenied:
                         // "user_photos" permission are denied, we need to ask permission !
                         self.showDeniedPermissionPopup()
@@ -157,7 +165,7 @@ class GBHFacebookAlbumPicker: UITableViewController {
     /// Handler for click on close button
     @objc fileprivate func closePicker() {
         self.delegate?.facebookImagePicker(didCancelled: self)
-        self.dismissPicker()
+        self.dismissPicker(.cancelled)
     }
 
     /// Handler for did retrieve album list
@@ -189,7 +197,7 @@ class GBHFacebookAlbumPicker: UITableViewController {
                                                                   comment: ""),
                                          style: UIAlertActionStyle.cancel,
                                          handler: { (_: UIAlertAction!) -> Void in
-                                            self.dismissPicker()
+                                            self.dismissPicker(.cancelled)
         })
 
         // Add button & show
@@ -200,7 +208,7 @@ class GBHFacebookAlbumPicker: UITableViewController {
 
     // MARK: - Table view data source
 
-    override public func numberOfSections(in tableView: UITableView) -> Int {
+    override open func numberOfSections(in tableView: UITableView) -> Int {
         if self.albums.count == 0 {
             return 0
         }
@@ -208,12 +216,12 @@ class GBHFacebookAlbumPicker: UITableViewController {
         return 1
     }
 
-    override public func tableView(_ tableView: UITableView,
+    override open func tableView(_ tableView: UITableView,
                                    numberOfRowsInSection section: Int) -> Int {
         return self.albums.count
     }
 
-    override public func tableView(_ tableView: UITableView,
+    override open func tableView(_ tableView: UITableView,
                                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // Dequeue the cell 
         var cell = tableView.dequeueReusableCell(withIdentifier: self.reuseIdentifier,
@@ -227,7 +235,7 @@ class GBHFacebookAlbumPicker: UITableViewController {
         return cell!
     }
 
-    override func tableView(_ tableView: UITableView,
+    override open func tableView(_ tableView: UITableView,
                             willDisplay cell: UITableViewCell,
                             forRowAt indexPath: IndexPath) {
 
@@ -237,13 +245,13 @@ class GBHFacebookAlbumPicker: UITableViewController {
         }
     }
 
-    override public func tableView(_ tableView: UITableView,
+    override open func tableView(_ tableView: UITableView,
                                    heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 90
     }
 
     /// When album are selected 
-    override public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override open func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let albumDetailVC = GBHPhotoPickerViewController()
         albumDetailVC.albumPictureDelegate = self
         albumDetailVC.album = self.albums[indexPath.row]
@@ -254,15 +262,13 @@ class GBHFacebookAlbumPicker: UITableViewController {
     // MARK: - Navigation 
 
     /// Dismiss the picker 
-    func dismissPicker() {
+    public func dismissPicker(_ type: DismissType) {
         DispatchQueue.main.async {
             // Reset flag
             GBHFacebookManager.shared.reset()
 
-            // Dismiss and call delegate 
-            self.dismiss(animated: true, completion: {
-                self.delegate?.facebookImagePickerDismissed()
-            })
+            // Call the dismiss action
+            self.dismissAction?(type)
         }
     }
 }
@@ -310,7 +316,7 @@ extension GBHFacebookAlbumPicker: GBHAlbumPickerTableViewControllerDelegate {
             )
 
             // Dismiss picker
-            self.dismissPicker()
+            self.dismissPicker(.success)
         }
     }
 
